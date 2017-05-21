@@ -70,8 +70,8 @@ class MongoModel(object):
         for item in dir(self):
             if not item.startswith('__')\
             and not item.endswith('__'):
-                if item not in _update.keys()\
-                and type(getattr(self, item, None)) in [bool, str, int, float, list, unicode, dict, datetime, set]\
+                if item not in list(_update.keys())\
+                and type(getattr(self, item, None)) in [bool, str, int, float, list, str, dict, datetime, set]\
                 and item is not 'model_name'\
                 and item is not 'sync':
                     _update.update({item: getattr(self, item)})
@@ -87,7 +87,7 @@ class MongoModel(object):
     
     def getfields(self, all_fields):
         fields = {}
-        for item in all_fields.keys():
+        for item in list(all_fields.keys()):
             if item.startswith('__')\
             and item.endswith('__')\
             or item == 'Meta'\

@@ -15,7 +15,7 @@ class Query(object):
         caller_frame = inspect.getouterframes(current_frame, 2)
         caller =  caller_frame[1][3]
         criteria = {}
-        for key in arguments.keys():
+        for key in list(arguments.keys()):
             if '__' in key:
                 _key = key.split('__')[0]
                 _filter = key.split('__')[1]
@@ -33,10 +33,10 @@ class Query(object):
                 elif _filter == 'exists': arguments.update({_key: {'$exists': arguments.get(key)}})
                 else: arguments.update({_key: arguments.get(key)})
                 arguments.pop(key)
-        for key in arguments.keys():
+        for key in list(arguments.keys()):
             if key not in criteria:
                 criteria.update({key: arguments[key]})
-        for key in fields.keys():
+        for key in list(fields.keys()):
             if key not in criteria and fields[key].options.get('default') not in [None, False]:
                 criteria.update({key: fields[key].options.get('default')})
         if caller == 'create':
@@ -50,8 +50,8 @@ class Query(object):
                     raise err
             return cursor
         elif caller == 'get':
-            for item in criteria.keys():
-                if item not in arguments.keys():
+            for item in list(criteria.keys()):
+                if item not in list(arguments.keys()):
                     criteria.pop(item)
             cursor = database[collection].find(criteria)
             if cursor.count() == 0:
@@ -62,24 +62,24 @@ class Query(object):
                 cursor = database[collection].find_one({'_id': cursor[0].get('_id')})
                 return cursor
         elif caller == 'filter':
-            for item in criteria.keys():
-                if item not in arguments.keys():
+            for item in list(criteria.keys()):
+                if item not in list(arguments.keys()):
                     criteria.pop(item)
-            print criteria
+            print(criteria)
             cursor = database[collection].find(criteria)
             return cursor
         elif caller == 'all':
             cursor = database[collection].find()
             return cursor
         elif caller == 'exclude':
-            for item in criteria.keys():
-                if item not in arguments.keys():
+            for item in list(criteria.keys()):
+                if item not in list(arguments.keys()):
                     criteria.pop(item)
             cursor = database[collection].find(criteria)
             return cursor
         elif caller == 'delete':
-            for item in criteria.keys():
-                if item not in arguments.keys():
+            for item in list(criteria.keys()):
+                if item not in list(arguments.keys()):
                     criteria.pop(item)
             cursor = database[collection].remove(criteria)
             if cursor:
@@ -97,10 +97,10 @@ class Queryset(object):
         self.model = model
         self.query_object = Query()
         self.ordering = None
-        self.indexes = range(self.query.count())
+        self.indexes = list(range(self.query.count()))
     
     def __repr__(self):
-        self.indexes = range(self.query.count())
+        self.indexes = list(range(self.query.count()))
         data = self.__getslice__(0, REPR_OUTPUT_SIZE)
         if self.query.count() > REPR_OUTPUT_SIZE:
             data[-1] = "...(remaining elements truncated)..."
@@ -112,7 +112,7 @@ class Queryset(object):
     def __iter__(self):
         self.index = 0
         self.end = self.query.count() - 1
-        self.indexes = range(self.query.count())
+        self.indexes = list(range(self.query.count()))
         if self.ordering == '?':
             random.shuffle(self.indexes)
         elif type(self.ordering) == str\
@@ -129,7 +129,7 @@ class Queryset(object):
             raise InvalidOrderingArgumentError
         return self
     
-    def next(self):
+    def __next__(self):
         try:
             item = self.__getitem__(self.indexes[self.index])
             self.index += 1
@@ -140,7 +140,7 @@ class Queryset(object):
     
     def __getitem__(self, idx):
         model = copy(self.model)
-        for key in self.query[idx].keys():
+        for key in list(self.query[idx].keys()):
             setattr(model, key, self.query[idx].get(key))
         return model
     
@@ -180,7 +180,7 @@ class Queryset(object):
         return self_copy
     
     def exclude(self, *args, **kwargs):
-        for item in kwargs.keys():
+        for item in list(kwargs.keys()):
             if type(kwargs.get(item)) == str:
                 kwargs[item] = {'$not': re.compile('.*' + str(kwargs[item]) + '.*')}
             elif '__' in item:
@@ -245,7 +245,7 @@ class Objects(object):
             kwargs
         )
         model = copy(self.model)
-        for item in query.keys():
+        for item in list(query.keys()):
             setattr(model, item, query[item])
         return model
     
@@ -257,7 +257,7 @@ class Objects(object):
             kwargs
         )
         model = copy(self.model)
-        for item in query.keys():
+        for item in list(query.keys()):
             setattr(model, item, query[item])
         return model
     
